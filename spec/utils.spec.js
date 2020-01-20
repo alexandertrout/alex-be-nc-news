@@ -44,6 +44,36 @@ describe("formatDates", () => {
   });
 });
 
-describe("makeRefObj", () => {});
+describe("makeRefObj", () => {
+  // This utility function should be able to take an array (list) of objects and return a reference object. The reference object must be keyed by each item's title, with the values being each item's corresponding id.
+  it("if passed an empty array return an empty array", () => {
+    let list = [];
+    expect(makeRefObj(list)).to.deep.equal([]);
+  });
+  it("can convert one object in the array to the correct reference object format", () => {
+    let list = [{ article_id: 1, title: "A" }];
+    let test = makeRefObj(list);
+    expect(test).to.deep.equal({ A: 1 });
+  });
+  it("can convert multiple objects in the array to the correct reference object format", () => {
+    let list = [
+      { article_id: 1, title: "A" },
+      { article_id: 2, title: "B" },
+      { article_id: 3, title: "C" }
+    ];
+    let test = makeRefObj(list);
+    expect(test).to.deep.equal({ A: 1, B: 2, C: 3 });
+  });
+  it("returns a different reference in memory, and does not mutate the original list array", () => {
+    let list = [
+      { article_id: 1, title: "A" },
+      { article_id: 2, title: "B" },
+      { article_id: 3, title: "C" }
+    ];
+    let test = formatDates(list);
+    expect(test).to.not.equal(list);
+    expect(list).to.deep.equal(list);
+  });
+});
 
 describe("formatComments", () => {});
