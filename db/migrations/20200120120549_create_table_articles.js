@@ -13,7 +13,7 @@ exports.up = function(knex) {
       .string("author")
       .references("username")
       .inTable("users");
-    table.string("body");
+    table.text("body");
     table.integer("votes").defaultTo(0);
     table.timestamp("created_at").defaultTo(knex.fn.now());
   });
