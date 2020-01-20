@@ -3,7 +3,8 @@ exports.up = function(knex) {
     table
       .string("slug")
       .unique()
-      .primary();
+      .primary()
+      .notNullable();
     table.string("description");
   });
 };
