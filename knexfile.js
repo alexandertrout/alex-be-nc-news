@@ -12,18 +12,15 @@ const baseConfig = {
 
 const customConfig = {
   development: {
-    client: "pg",
     connection: {
       database: "nc_news"
     }
   },
   test: {
-    client: "pg",
     connection: {
       database: "nc_news_test"
     }
   }
 };
 
-module.exports = customConfig[ENV];
-// module.exports = { ...customConfig[ENV], ...baseConfig };
+module.exports = { ...customConfig[ENV], ...baseConfig };

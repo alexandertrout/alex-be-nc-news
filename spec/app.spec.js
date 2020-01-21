@@ -7,6 +7,9 @@ const chaiSorted = require("chai-sorted");
 const chai = require("chai");
 const { expect } = chai;
 chai.use(chaiSorted);
+
+beforeEach(() => connection.seed.run());
+
 after(() => connection.destroy());
 
 describe("/api", () => {
