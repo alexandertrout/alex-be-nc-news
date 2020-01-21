@@ -1,4 +1,5 @@
 const connection = require("../../db/connection");
+const { fetchUserByUsername } = require("../models/users-models");
 
 // exports.fetchArticleById = article_id => {
 //   return connection("articles")
@@ -62,4 +63,38 @@ exports.patchVotesById = (article_id, voteChange) => {
     .then(patchedArticle => {
       return patchedArticle[0];
     });
+};
+
+exports.createNewCommentByArticleId = (article_id, commentData) => {
+  if (
+    typeof commentData.body !== "string" ||
+    typeof commentData.username !== "string"
+  )
+    return Promise.reject({
+      status: 400,
+      msg: "invalid data type in the request body"
+    });
+  else
+    return connection("users")
+      .where("username", commentData.username)
+      .returning("*")
+      .then(users => {
+        if (users.length === 0) {
+          return Promise.reject({
+            status: 404,
+            msg: "invalid username in the request body"
+          });
+        } else {
+          commentData.article_id = article_id;
+          commentData.author = commentData.username;
+          delete commentData.username;
+
+          return connection("comments")
+            .insert(commentData)
+            .returning("*")
+            .then(insertedComments => {
+              return insertedComments[0];
+            });
+        }
+      });
 };

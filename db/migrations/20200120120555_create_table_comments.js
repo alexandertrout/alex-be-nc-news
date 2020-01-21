@@ -1,6 +1,6 @@
 exports.up = function(knex) {
   return knex.schema.createTable("comments", table => {
-    table.increments("table_id").primary();
+    table.increments("comment_id").primary();
     table
       .text("author")
       .references("username")
@@ -8,7 +8,8 @@ exports.up = function(knex) {
     table
       .integer("article_id")
       .references("article_id")
-      .inTable("articles");
+      .inTable("articles")
+      .notNullable();
     table.integer("votes").defaultTo(0);
     table.timestamp("created_at").defaultTo(knex.fn.now());
     table.text("body");

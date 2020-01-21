@@ -194,5 +194,60 @@ describe("/api", () => {
         });
       });
     });
+    describe("/:article_id/comments", () => {
+      describe("POST", () => {
+        it("HAPPY - status 200 - responds with an object of the posted comment", () => {
+          return request(app)
+            .post("/api/articles/1/comments")
+            .send({ username: "rogersop", body: "This is a test comment" })
+            .expect(200)
+            .then(({ body }) => {
+              expect(body.comment.body).to.equal("This is a test comment");
+              expect(body.comment.article_id).to.equal(1);
+              expect(body.comment.author).to.equal("rogersop");
+              expect(body.comment.votes).to.equal(0);
+              expect(body.comment).to.contain.keys("created_at");
+            });
+        });
+        it("SAD - status 404 - msg key on the response body explains error is due to non-existent article_id", () => {
+          return request(app)
+            .post("/api/articles/212/comments")
+            .send({ username: "rogersop", body: "This is a test comment" })
+            .expect(404)
+            .then(({ body }) => {
+              expect(body.msg).to.equal("valid but non-exisitent article_id");
+            });
+        });
+        it("SAD - status 400 - msg key on the response body explains error is due to invalid article_id", () => {
+          return request(app)
+            .post("/api/articles/not-article-id/comments")
+            .send({ username: "rogersop", body: "This is a test comment" })
+            .expect(400)
+            .then(({ body }) => {
+              expect(body.msg).to.equal("invalid article_id");
+            });
+        });
+        it("SAD - status 400 - msg key on the response body explains error is due to invalid data type in the req body / empty body", () => {
+          return request(app)
+            .post("/api/articles/1/comments")
+            .send({})
+            .expect(400)
+            .then(({ body }) => {
+              expect(body.msg).to.equal(
+                "invalid data type in the request body"
+              );
+            });
+        });
+        it("SAD - status 404 - msg key on the response body explains error is due to invalid username in the req body", () => {
+          return request(app)
+            .post("/api/articles/1/comments")
+            .send({ username: "alex", body: "This is a test comment" })
+            .expect(404)
+            .then(({ body }) => {
+              expect(body.msg).to.equal("invalid username in the request body");
+            });
+        });
+      });
+    });
   });
 });
