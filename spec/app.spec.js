@@ -99,7 +99,7 @@ describe("/api", () => {
         });
         return Promise.all(methodPromises);
       });
-      describe("/GET", () => {
+      describe("GET", () => {
         it("HAPPY - status 200 - responds with an object of the requested article_id", () => {
           return request(app)
             .get("/api/articles/1")
@@ -140,6 +140,56 @@ describe("/api", () => {
             .expect(400)
             .then(({ body }) => {
               expect(body.msg).to.equal("invalid article_id");
+            });
+        });
+      });
+      describe("PATCH", () => {
+        it("HAPPY - status 200 - responds with an object of the correctly updated article", () => {
+          return request(app)
+            .patch("/api/articles/1")
+            .send({ inc_votes: -10 })
+            .expect(200)
+            .then(({ body }) => {
+              expect(body.article.votes).to.equal(90);
+              expect(body.article).to.include.keys(
+                "article_id",
+                "title",
+                "topic",
+                "author",
+                "body",
+                "votes",
+                "created_at"
+                //,comment_count?? Nessecary?
+              );
+            });
+        });
+        it("SAD - status 404 - msg key on the response body explains error is due to non-existant article_id", () => {
+          return request(app)
+            .patch("/api/articles/100")
+            .send({ inc_votes: -10 })
+            .expect(404)
+            .then(({ body }) => {
+              expect(body.msg).to.equal("valid but non existent article_id");
+            });
+        });
+        it("SAD - status 400 - msg key on the response body explains error is due to invalid article_id", () => {
+          return request(app)
+            .patch("/api/articles/not-article-id")
+            .send({ inc_votes: -10 })
+            .expect(400)
+            .then(({ body }) => {
+              expect(body.msg).to.equal("invalid article_id");
+            });
+        });
+        it("SAD - status 400 - msg key on the response body explains error is due to invalid data type in the req body / empty body", () => {
+          return request(app)
+            .patch("/api/articles/1")
+            .send({ inc_votes: "100" })
+            .expect(400)
+            .then(({ body }) => {
+              expect(body.msg).to.equal(
+                "invalid data type in the request body"
+              );
             });
         });
       });
