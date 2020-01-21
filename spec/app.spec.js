@@ -14,20 +14,34 @@ after(() => connection.destroy());
 
 describe("/api", () => {
   describe("/topics", () => {
+    it("SAD - Status: 405 for invalid method on topic endpoint", () => {
+      const methods = ["put", "patch", "delete", "post"];
+      const methodPromises = methods.map(method => {
+        return request(app)
+          [method]("/api/topics")
+          .expect(405)
+          .then(({ body }) => {
+            expect(body.msg).to.equal("Method not allowed on that endpoint!");
+          });
+      });
+      return Promise.all(methodPromises);
+    });
     describe("/GET", () => {
-      it("gives a status of 200 and responds with an object containing an array of topic objects", () => {
+      it("HAPPY - gives a status of 200 and responds with an object containing an array of topic objects", () => {
         return request(app)
           .get("/api/topics")
           .expect(200)
           .then(({ body }) => {
             expect(body.topics).to.be.an("array");
-            // expect(body.t[0]).to.include.keys(
-            //   "treasure_id",
-            //   "treasure_name",
-            //   "colour",
-            //   "age",
-            //   "cost_at_auction"
-            // );
+            expect(body.topics[0]).to.include.keys("description", "slug");
+          });
+      });
+      it("SAD - gives a status of 404, msg key on the response body explains the reason", () => {
+        return request(app)
+          .get("/api/toop")
+          .expect(404)
+          .then(({ body }) => {
+            expect(body.msg).to.equal("Invalid Route!");
           });
       });
     });
