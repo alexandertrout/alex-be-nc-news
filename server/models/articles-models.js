@@ -84,17 +84,48 @@ exports.createNewCommentByArticleId = (article_id, commentData) => {
             status: 404,
             msg: "invalid username in the request body"
           });
-        } else {
-          commentData.article_id = article_id;
-          commentData.author = commentData.username;
-          delete commentData.username;
-
-          return connection("comments")
-            .insert(commentData)
-            .returning("*")
-            .then(insertedComments => {
-              return insertedComments[0];
-            });
         }
+      })
+      .then(() => {
+        return connection("articles")
+          .where("article_id", article_id)
+          .returning("*")
+          .then(article => {
+            if (article.length === 0)
+              return Promise.reject({
+                status: 404,
+                msg: "valid but non-exisitent article_id"
+              });
+            //above is checkin if all parameters are okay, below is preperation and insertion of the comment into comments.
+            else commentData.article_id = article_id;
+            commentData.author = commentData.username;
+            delete commentData.username;
+            return connection("comments")
+              .insert(commentData)
+              .returning("*")
+              .then(insertedComments => {
+                return insertedComments[0];
+              });
+          });
       });
+};
+
+exports.fetchCommentsById = (
+  article_id,
+  sort_by = "created_at",
+  order = "desc"
+) => {
+  return connection("comments")
+    .select("*")
+    .where("article_id", article_id)
+    .returning("*")
+    .orderBy(sort_by, order)
+    .then(comments => {
+      if (comments.length === 0)
+        return Promise.reject({
+          status: 404,
+          msg: "valid but non-exisitent article_id"
+        });
+      return comments;
+    });
 };

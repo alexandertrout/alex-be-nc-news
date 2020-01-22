@@ -6,22 +6,31 @@ exports.handle400s = (err, req, res, next) => {
   const codes = ["22P02"];
   if (codes.includes(err.code)) {
     res.status(400).send({ msg: "invalid article_id" });
-  } else next(err);
+  }
+  next(err);
 };
 exports.handle404s = (err, req, res, next) => {
   const codes = ["23503"];
   if (codes.includes(err.code)) {
     res.status(404).send({ msg: "valid but non-exisitent article_id" });
-  } else next(err);
+  }
+  next(err);
+};
+
+exports.handle422s = (err, req, res, next) => {
+  const codes = ["42703"];
+  if (codes.includes(err.code)) {
+    res.status(422).send({ msg: "invalid query on the request" });
+  }
 };
 
 exports.handleCustoms = (err, req, res, next) => {
   if (err.msg) {
     res.status(err.status).send({ msg: err.msg });
-  } else next(err);
+  }
+  next(err);
 };
 
 exports.handle500s = (err, req, res, next) => {
-  console.log(err);
   res.status(500).send({ msg: "Server Error!" });
 };

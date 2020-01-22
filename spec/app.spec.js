@@ -7,6 +7,7 @@ const chaiSorted = require("chai-sorted");
 const chai = require("chai");
 const { expect } = chai;
 chai.use(chaiSorted);
+chai.use(require("sams-chai-sorted"));
 
 beforeEach(() => connection.seed.run());
 
@@ -211,7 +212,7 @@ describe("/api", () => {
         });
         it("SAD - status 404 - msg key on the response body explains error is due to non-existent article_id", () => {
           return request(app)
-            .post("/api/articles/212/comments")
+            .post("/api/articles/300/comments")
             .send({ username: "rogersop", body: "This is a test comment" })
             .expect(404)
             .then(({ body }) => {
@@ -245,6 +246,77 @@ describe("/api", () => {
             .expect(404)
             .then(({ body }) => {
               expect(body.msg).to.equal("invalid username in the request body");
+            });
+        });
+      });
+      describe("GET", () => {
+        it("HAPPY - status 200 - responds with an array of comment objects, each having the correct properties", () => {
+          return request(app)
+            .get("/api/articles/1/comments")
+            .expect(200)
+            .then(({ body }) => {
+              expect(body.comments[0]).to.contain.keys(
+                "comment_id",
+                "votes",
+                "created_at",
+                "author", // which is the username from the users table?? - extra logic? Map over results once they're recieved from connection.
+                "body"
+              );
+              expect(body.comments.length).to.equal(13);
+            });
+        });
+        it("HAPPY - status 200 - responds with an array of comment objects, accepting the sort_by (created_at default) and order (desc default) queries", () => {
+          return request(app)
+            .get("/api/articles/1/comments")
+            .expect(200)
+            .then(({ body }) => {
+              expect(body.comments).to.be.sortedBy("created_at", {
+                descending: true
+              });
+            });
+        });
+        it("HAPPY - status 200 - responds with an array of comment objects, accepting any valid column as the the sort_by query", () => {
+          termsArray = ["votes", "body", "author", "created_at", "comment_id"];
+          const sort_byPromises = termsArray.map(term => {
+            return request(app)
+              .get(`/api/articles/1/comments?sort_by=${term}&order=asc`)
+              .expect(200)
+              .then(({ body }) => {
+                expect(body.comments).to.be.sortedBy(`${term}`);
+              });
+          });
+          return Promise.all(sort_byPromises);
+        });
+        it("SAD - status 404 - msg key on the response body explains error is due to non existent article_id", () => {
+          return request(app)
+            .get("/api/articles/550/comments")
+            .expect(404)
+            .then(({ body }) => {
+              expect(body.msg).to.equal("valid but non-exisitent article_id");
+            });
+        });
+        it("SAD - status 400 - msg key on the response body explains error is due to invalid article_id", () => {
+          return request(app)
+            .get("/api/articles/not-an-id/comments")
+            .expect(400)
+            .then(({ body }) => {
+              expect(body.msg).to.equal("invalid article_id");
+            });
+        });
+        it("SAD - status 400 - msg key on the response body explains error is due to non-existent article_id", () => {
+          return request(app)
+            .get("/api/articles/700/comments")
+            .expect(404)
+            .then(({ body }) => {
+              expect(body.msg).to.equal("valid but non-exisitent article_id");
+            });
+        });
+        it("SAD - status 422 - msg key on the response body explains error is due to invalid request query", () => {
+          return request(app)
+            .get("/api/articles/1/comments?sort_by=not_a_column")
+            .expect(422)
+            .then(({ body }) => {
+              expect(body.msg).to.equal("invalid query on the request");
             });
         });
       });
