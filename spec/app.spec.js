@@ -87,6 +87,98 @@ describe("/api", () => {
     });
   });
   describe("/articles", () => {
+    it("SAD - status 405 - invalid method on /:comment_id endpoint", () => {
+      const methods = ["put", "delete", "post", "patch"];
+      const methodPromises = methods.map(method => {
+        return request(app)
+          [method]("/api/articles")
+          .expect(405)
+          .then(({ body }) => {
+            expect(body.msg).to.equal("Method not allowed on that endpoint!");
+          });
+      });
+      return Promise.all(methodPromises);
+    });
+    describe("GET", () => {
+      it("HAPPY - status 200 - responds with an array of article objects", () => {
+        return request(app)
+          .get("/api/articles")
+          .expect(200)
+          .then(({ body }) => {
+            expect(body.articles).to.be.an("array");
+            expect(body.articles[0]).to.contain.keys(
+              "author",
+              "title",
+              "article_id",
+              "topic",
+              "created_at",
+              "votes"
+            );
+          });
+      });
+      it("HAPPY - status 200 - the article objects in the array order_by default is created_at desc", () => {
+        return request(app)
+          .get("/api/articles")
+          .expect(200)
+          .then(({ body }) => {
+            expect(body.articles).to.be.sortedBy("created_at", {
+              descending: true
+            });
+          });
+      });
+      it("HAPPY - status 200 - the article objects in the array include a comment_count key", () => {
+        return request(app)
+          .get("/api/articles")
+          .expect(200)
+          .then(({ body }) => {
+            expect(body.articles[0]).to.contain.keys("comment_count");
+          });
+      });
+      it("HAPPY - status 200 - the comment_count keys have the correct associated values", () => {
+        return request(app)
+          .get("/api/articles")
+          .expect(200)
+          .then(({ body }) => {
+            expect(body.articles[0].comment_count).to.equal(13);
+          });
+      });
+      it("HAPPY - status 200 - should accept sort_by and order querys", () => {
+        return request(app)
+          .get("/api/articles?sort_by=author&order=asc")
+          .expect(200)
+          .then(({ body }) => {
+            expect(body.articles).to.be.sortedBy("author");
+          });
+      });
+      it("HAPPY - status 200 - should accept author and topic querys", () => {
+        return request(app)
+          .get(
+            "/api/articles?author=rogersop&topic=mitch&sort_by=votes&order=asc"
+          )
+          .expect(200)
+          .then(({ body }) => {
+            expect(body.articles).to.be.sortedBy("votes");
+            expect(body.articles[0].author).to.equal("rogersop");
+            expect(body.articles[0].topic).to.equal("mitch");
+          });
+      });
+      it("SAD - status 422 - msg key on the response body explains error is due to invalid request query (topic)", () => {
+        return request(app)
+          .get("/api/articles?topic=topicthatdoesntexisit")
+          .expect(422)
+          .then(({ body }) => {
+            expect(body.msg).to.equal("invalid query on the request");
+          });
+      });
+      it("SAD - status 422 - msg key on the response body explains error is due to invalid request query (author)", () => {
+        return request(app)
+          .get("/api/articles?author=timmy")
+          .expect(422)
+          .then(({ body }) => {
+            expect(body.msg).to.equal("invalid query on the request");
+          });
+      });
+    });
     describe("/:article_id", () => {
       it("SAD - status 405 - invalid method on /:article_id endpoint", () => {
         const methods = ["put", "delete", "post"];
@@ -140,7 +232,7 @@ describe("/api", () => {
             .get("/api/articles/not-article-id")
             .expect(400)
             .then(({ body }) => {
-              expect(body.msg).to.equal("invalid article_id");
+              expect(body.msg).to.equal("invalid id");
             });
         });
       });
@@ -179,7 +271,7 @@ describe("/api", () => {
             .send({ inc_votes: -10 })
             .expect(400)
             .then(({ body }) => {
-              expect(body.msg).to.equal("invalid article_id");
+              expect(body.msg).to.equal("invalid id");
             });
         });
         it("SAD - status 400 - msg key on the response body explains error is due to invalid data type in the req body / empty body", () => {
@@ -196,6 +288,18 @@ describe("/api", () => {
       });
     });
     describe("/:article_id/comments", () => {
+      it("SAD - status 405 - invalid method on /:comment_id endpoint", () => {
+        const methods = ["put", "delete", "post", "patch"];
+        const methodPromises = methods.map(method => {
+          return request(app)
+            [method]("/api/articles")
+            .expect(405)
+            .then(({ body }) => {
+              expect(body.msg).to.equal("Method not allowed on that endpoint!");
+            });
+        });
+        return Promise.all(methodPromises);
+      });
       describe("POST", () => {
         it("HAPPY - status 200 - responds with an object of the posted comment", () => {
           return request(app)
@@ -225,7 +329,7 @@ describe("/api", () => {
             .send({ username: "rogersop", body: "This is a test comment" })
             .expect(400)
             .then(({ body }) => {
-              expect(body.msg).to.equal("invalid article_id");
+              expect(body.msg).to.equal("invalid id");
             });
         });
         it("SAD - status 400 - msg key on the response body explains error is due to invalid data type in the req body / empty body", () => {
@@ -300,7 +404,7 @@ describe("/api", () => {
             .get("/api/articles/not-an-id/comments")
             .expect(400)
             .then(({ body }) => {
-              expect(body.msg).to.equal("invalid article_id");
+              expect(body.msg).to.equal("invalid id");
             });
         });
         it("SAD - status 400 - msg key on the response body explains error is due to non-existent article_id", () => {
@@ -317,6 +421,62 @@ describe("/api", () => {
             .expect(422)
             .then(({ body }) => {
               expect(body.msg).to.equal("invalid query on the request");
+            });
+        });
+      });
+    });
+  });
+  describe("/comments", () => {
+    describe("/:comment_id", () => {
+      it("SAD - status 405 - invalid method on /:comment_id endpoint", () => {
+        const methods = ["put", "delete", "post"];
+        const methodPromises = methods.map(method => {
+          return request(app)
+            [method]("/api/comments/:comment_id")
+            .expect(405)
+            .then(({ body }) => {
+              expect(body.msg).to.equal("Method not allowed on that endpoint!");
+            });
+        });
+        return Promise.all(methodPromises);
+      });
+      describe("PATCH", () => {
+        it("HAPPY - status 200 - responds with an object of the correctly updated comment", () => {
+          return request(app)
+            .patch("/api/comments/2")
+            .send({ inc_votes: -10 })
+            .expect(200)
+            .then(({ body }) => {
+              expect(typeof body.comment).to.equal("object");
+            });
+        });
+        it("SAD - status 404 - msg key on the response body explains error is due to non-existant comment_id", () => {
+          return request(app)
+            .patch("/api/comments/200")
+            .send({ inc_votes: -10 })
+            .expect(404)
+            .then(({ body }) => {
+              expect(body.msg).to.equal("valid but non existent comment_id");
+            });
+        });
+        it("SAD - status 400 - msg key on the response body explains error is due to invalid comment_id", () => {
+          return request(app)
+            .patch("/api/comments/not-an-id")
+            .send({ inc_votes: 10 })
+            .expect(400)
+            .then(({ body }) => {
+              expect(body.msg).to.equal("invalid id");
+            });
+        });
+        it("SAD - status 400 - msg key on the response body explains error is due to invalid data type in the req body / empty body", () => {
+          return request(app)
+            .patch("/api/comments/2")
+            .send({})
+            .expect(400)
+            .then(({ body }) => {
+              expect(body.msg).to.equal(
+                "invalid data type in the request body"
+              );
             });
         });
       });

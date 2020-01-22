@@ -5,7 +5,7 @@ exports.formatDates = list => {
     // })
     .map(obj => {
       let newObj = { ...obj };
-      let newTimestamp = new Date(newObj.created_at * 1000);
+      let newTimestamp = new Date(newObj.created_at);
       newObj.created_at = newTimestamp;
       return newObj;
     });
@@ -31,7 +31,7 @@ exports.formatComments = (comments, articleRef) => {
       newObj.author = newObj.created_by;
       delete newObj.created_by;
       //
-      let newTimestamp = new Date(newObj.created_at * 1000);
+      let newTimestamp = new Date(newObj.created_at);
       newObj.created_at = newTimestamp;
       //
       for (const key in articleRef) {

@@ -5,11 +5,12 @@ exports.handle405s = (req, res, next) => {
 exports.handle400s = (err, req, res, next) => {
   const codes = ["22P02"];
   if (codes.includes(err.code)) {
-    res.status(400).send({ msg: "invalid article_id" });
+    res.status(400).send({ msg: "invalid id" });
   }
   next(err);
 };
 exports.handle404s = (err, req, res, next) => {
+  console.log(err);
   const codes = ["23503"];
   if (codes.includes(err.code)) {
     res.status(404).send({ msg: "valid but non-exisitent article_id" });
