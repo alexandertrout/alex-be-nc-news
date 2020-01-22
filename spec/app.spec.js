@@ -429,7 +429,7 @@ describe("/api", () => {
   describe("/comments", () => {
     describe("/:comment_id", () => {
       it("SAD - status 405 - invalid method on /:comment_id endpoint", () => {
-        const methods = ["put", "delete", "post"];
+        const methods = ["put", "post", "get"];
         const methodPromises = methods.map(method => {
           return request(app)
             [method]("/api/comments/:comment_id")
@@ -477,6 +477,29 @@ describe("/api", () => {
               expect(body.msg).to.equal(
                 "invalid data type in the request body"
               );
+            });
+        });
+      });
+      describe("DELETE", () => {
+        it("HAPPY - status 204 - deletes the comment by comment_id and does not respond with anything", () => {
+          return request(app)
+            .delete("/api/comments/2")
+            .expect(204);
+        });
+        it("SAD - status 404 - msg key on the response body explains error is due to non existent comment_id", () => {
+          return request(app)
+            .delete("/api/comments/200")
+            .expect(404)
+            .then(({ body }) => {
+              expect(body.msg).to.equal("non existent comment_id");
+            });
+        });
+        it("SAD - status 400 - msg key on the response body explains error is due to invalid comment_id", () => {
+          return request(app)
+            .delete("/api/comments/invalid-id")
+            .expect(400)
+            .then(({ body }) => {
+              expect(body.msg).to.equal("invalid id");
             });
         });
       });

@@ -25,3 +25,9 @@ exports.updateCommentById = (comment_id, voteChange) => {
       return patchedComment[0];
     });
 };
+
+exports.removeCommentById = comment_id => {
+  return connection("comments")
+    .where("comment_id", comment_id)
+    .del();
+};
