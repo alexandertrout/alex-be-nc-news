@@ -1,22 +1,5 @@
 const connection = require("../../db/connection");
 
-// exports.fetchArticleById = article_id => {
-//   return connection("articles")
-//     .where("article_id", article_id)
-//     .returning("*")
-//     .then(articles => {
-//       connection("comments")
-//         .where("article_id", article_id)
-//         .returning("*")
-//         .then(comments => {
-//           console.log(articles);
-//           console.log(comments.length);
-//         });
-//     });
-// };
-
-// Refactored below to use Promise.all();
-
 exports.fetchAllArticles = (
   sort_by = "created_at",
   order = "desc",
@@ -49,24 +32,25 @@ exports.fetchAllArticles = (
 };
 
 exports.fetchArticleById = article_id => {
-  const promise1 = connection("articles")
-    .where("article_id", article_id)
-    .returning("*");
-  const promise2 = connection("comments")
-    .where("article_id", article_id)
-    .returning("*");
-
-  return Promise.all([promise1, promise2]).then(articleAndComments => {
-    if (articleAndComments[0].length === 0) {
-      return Promise.reject({
-        status: 404,
-        msg: "valid but non existent article_id"
+  return connection("articles")
+    .select("articles.*")
+    .where("articles.article_id", article_id)
+    .count({ comment_count: "comment_id" })
+    .leftJoin("comments", "articles.article_id", "comments.article_id")
+    .groupBy("articles.article_id")
+    .then(articles => {
+      if (articles.length === 0)
+        return Promise.reject({
+          status: 404,
+          msg: "valid but non existent article_id"
+        });
+      const newArticles = articles.map(article => {
+        let newCommentCount = parseInt(article.comment_count);
+        article.comment_count = newCommentCount;
+        return article;
       });
-    } else {
-      articleAndComments[0][0].comment_count = articleAndComments[1].length;
-      return articleAndComments[0][0];
-    }
-  });
+      return articles[0];
+    });
 };
 
 exports.patchVotesById = (article_id, voteChange) => {

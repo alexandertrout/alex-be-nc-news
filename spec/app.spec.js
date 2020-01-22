@@ -221,7 +221,7 @@ describe("/api", () => {
         });
         it("SAD - status 404 - msg key on the response body explains error is due to non-existant article_id", () => {
           return request(app)
-            .get("/api/articles/300")
+            .get("/api/articles/400")
             .expect(404)
             .then(({ body }) => {
               expect(body.msg).to.equal("valid but non existent article_id");
@@ -252,7 +252,7 @@ describe("/api", () => {
                 "body",
                 "votes",
                 "created_at"
-                //,comment_count?? Nessecary?
+                //comment_count?? Nessecary?
               );
             });
         });
