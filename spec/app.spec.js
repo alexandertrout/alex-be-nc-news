@@ -391,7 +391,8 @@ describe("/api", () => {
           });
           return Promise.all(sort_byPromises);
         });
-        it("SAD - status 404 - msg key on the response body explains error is due to non existent article_id", () => {
+        // responds with an empty array if no commets are attributed to that article.
+        xit("SAD - status 404 - msg key on the response body explains error is due to non existent article_id", () => {
           return request(app)
             .get("/api/articles/550/comments")
             .expect(404)
@@ -405,14 +406,6 @@ describe("/api", () => {
             .expect(400)
             .then(({ body }) => {
               expect(body.msg).to.equal("invalid id");
-            });
-        });
-        it("SAD - status 400 - msg key on the response body explains error is due to non-existent article_id", () => {
-          return request(app)
-            .get("/api/articles/700/comments")
-            .expect(404)
-            .then(({ body }) => {
-              expect(body.msg).to.equal("valid but non-exisitent article_id");
             });
         });
         it("SAD - status 422 - msg key on the response body explains error is due to invalid request query", () => {

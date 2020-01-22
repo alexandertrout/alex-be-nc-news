@@ -135,11 +135,12 @@ exports.fetchCommentsById = (
     .returning("*")
     .orderBy(sort_by, order)
     .then(comments => {
-      if (comments.length === 0)
-        return Promise.reject({
-          status: 404,
-          msg: "valid but non-exisitent article_id"
-        });
+      // Sometimes this needs to send back an empty array!!
+      // if (comments.length === 0)
+      //   return Promise.reject({
+      //     status: 404,
+      //     msg: "valid but non-exisitent article_id"
+      //   });
       return comments;
     });
 };
