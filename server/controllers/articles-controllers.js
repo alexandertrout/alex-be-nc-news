@@ -10,14 +10,25 @@ const { checkTopicExists } = require("../models/topics-models");
 const { checkUserExists } = require("../models/users-models");
 
 exports.getAllArticles = (req, res, next) => {
-  let { sort_by, order, author, topic } = req.query;
+  let { sort_by, order, author, topic, limit } = req.query;
   let promiseArray = [fetchAllArticles(sort_by, order, author, topic)];
   if (topic !== undefined) promiseArray.push(checkTopicExists(topic));
   if (author !== undefined) promiseArray.push(checkUserExists(author));
-
   Promise.all(promiseArray)
     .then(returnArray => {
-      res.status(200).send({ articles: returnArray[0] });
+      if (limit) {
+        let limitNumber = parseInt(limit);
+        let limitedArticles = [];
+        for (let i = 0; i < limitNumber; i++) {
+          limitedArticles.push(returnArray[0][i]);
+        }
+        res.status(200).send({
+          articles: limitedArticles,
+          total_count: returnArray[0].length
+        });
+      } else {
+        res.status(200).send({ articles: returnArray[0] });
+      }
     })
     .catch(next);
 };

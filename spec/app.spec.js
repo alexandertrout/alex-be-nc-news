@@ -14,7 +14,7 @@ beforeEach(() => connection.seed.run());
 after(() => connection.destroy());
 
 describe("/api", () => {
-  describe.only("GET", () => {
+  describe("GET", () => {
     it("SAD - status 200 - responds with JSON describing all the available endpoints on the API", () => {
       return request(app)
         .get("/api")
@@ -22,7 +22,8 @@ describe("/api", () => {
         .then(response => {
           // console.log(response);
           expect(JSON.parse(response.text)).to.deep.equal({
-            msg: "description of every avaliable endpoint on this API"
+            msg:
+              "description of every avaliable endpoint on this API... GET /api/topics ... GET /api/users/:username ... GET /api/articles/:article_id ... PATCH /api/articles/:article_id ... POST /api/articles/:article_id/comments ... GET /api/articles/:article_id/comments ... GET /api/articles ... PATCH /api/comments/:comment_id ... DELETE /api/comments/:comment_id ... GET /api"
           });
         });
     });
@@ -173,6 +174,15 @@ describe("/api", () => {
             expect(body.articles).to.be.sortedBy("votes");
             expect(body.articles[0].author).to.equal("rogersop");
             expect(body.articles[0].topic).to.equal("mitch");
+          });
+      });
+      xit("HAPPY - status 200 - should accept querys for limit", () => {
+        return request(app)
+          .get("/api/articles?limit=5")
+          .expect(200)
+          .then(({ body }) => {
+            expect(body.articles.length).to.equal(5);
+            expect(body.total_count).to.equal(12);
           });
       });
       it("SAD - status 400 - msg key on the response body explains error is due to non-existent topic", () => {
