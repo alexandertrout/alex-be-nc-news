@@ -14,6 +14,16 @@ beforeEach(() => connection.seed.run());
 after(() => connection.destroy());
 
 describe("/api", () => {
+  xdescribe("GET", () => {
+    it("SAD - status 200 - responds with JSON describing all the available endpoints on the API", () => {
+      return request(app)
+        .get("/api")
+        .expect(200)
+        .then(({ body }) => {
+          expect(body).to.be.an("JSON");
+        });
+    });
+  });
   it("SAD - status 404 - invalid route (path)", () => {
     return request(app)
       .get("/boo")
@@ -162,20 +172,24 @@ describe("/api", () => {
             expect(body.articles[0].topic).to.equal("mitch");
           });
       });
-      it("SAD - status 422 - msg key on the response body explains error is due to invalid request query (topic)", () => {
+      it("SAD - status 400 - msg key on the response body explains error is due to non-existent topic", () => {
         return request(app)
           .get("/api/articles?topic=topicthatdoesntexisit")
-          .expect(422)
+          .expect(400)
           .then(({ body }) => {
-            expect(body.msg).to.equal("invalid query on the request");
+            expect(body.msg).to.equal(
+              "invalid topic query - topic does not exist"
+            );
           });
       });
-      it("SAD - status 422 - msg key on the response body explains error is due to invalid request query (author)", () => {
+      it("SAD - status 400 - msg key on the response body explains error is due to non-existent author", () => {
         return request(app)
           .get("/api/articles?author=timmy")
-          .expect(422)
+          .expect(400)
           .then(({ body }) => {
-            expect(body.msg).to.equal("invalid query on the request");
+            expect(body.msg).to.equal(
+              "invalid author query - user does not exist"
+            );
           });
       });
     });
@@ -320,7 +334,7 @@ describe("/api", () => {
             .send({ username: "rogersop", body: "This is a test comment" })
             .expect(404)
             .then(({ body }) => {
-              expect(body.msg).to.equal("valid but non-exisitent article_id");
+              expect(body.msg).to.equal("valid but non-exisitent");
             });
         });
         it("SAD - status 400 - msg key on the response body explains error is due to invalid article_id", () => {
@@ -349,7 +363,7 @@ describe("/api", () => {
             .send({ username: "alex", body: "This is a test comment" })
             .expect(404)
             .then(({ body }) => {
-              expect(body.msg).to.equal("invalid username in the request body");
+              expect(body.msg).to.equal("valid but non-exisitent");
             });
         });
       });
@@ -363,7 +377,7 @@ describe("/api", () => {
                 "comment_id",
                 "votes",
                 "created_at",
-                "author", // which is the username from the users table?? - extra logic? Map over results once they're recieved from connection.
+                "author",
                 "body"
               );
               expect(body.comments.length).to.equal(13);
@@ -391,11 +405,18 @@ describe("/api", () => {
           });
           return Promise.all(sort_byPromises);
         });
-        // responds with an empty array if no commets are attributed to that article.
-        xit("SAD - status 404 - msg key on the response body explains error is due to non existent article_id", () => {
+        it("HAPPY - status 200 - responds with an empty array if an article exisits but has no comments", () => {
+          return request(app)
+            .get("/api/articles/2/comments")
+            .expect(200)
+            .then(({ body }) => {
+              expect(body.comments.length).to.equal(0);
+            });
+        });
+        it("SAD - status 400 - msg key on the response body explains error is due to non existent article_id", () => {
           return request(app)
             .get("/api/articles/550/comments")
-            .expect(404)
+            .expect(400)
             .then(({ body }) => {
               expect(body.msg).to.equal("valid but non-exisitent article_id");
             });
@@ -413,7 +434,7 @@ describe("/api", () => {
             .get("/api/articles/1/comments?sort_by=not_a_column")
             .expect(422)
             .then(({ body }) => {
-              expect(body.msg).to.equal("invalid query on the request");
+              expect(body.msg).to.equal("invalid query");
             });
         });
       });

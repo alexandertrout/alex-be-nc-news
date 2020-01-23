@@ -15,8 +15,8 @@ app.use("/api", apiRouter);
 
 app.use(handleCustoms);
 app.use(handle400s);
-app.use(handle422s);
 app.use(handle404s);
+app.use(handle422s);
 app.use(handle500s);
 
 app.all("/*", (req, res, next) => {

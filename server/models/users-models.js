@@ -13,3 +13,16 @@ exports.fetchUserByUsername = username => {
       else return users[0];
     });
 };
+
+exports.checkUserExists = username => {
+  return connection("users")
+    .where("username", username)
+    .returning("*")
+    .then(users => {
+      if (users.length === 0)
+        return Promise.reject({
+          status: 400,
+          msg: "invalid author query - user does not exist"
+        });
+    });
+};

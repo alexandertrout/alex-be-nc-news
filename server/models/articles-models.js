@@ -17,11 +17,6 @@ exports.fetchAllArticles = (
     })
     .orderBy(sort_by, order)
     .then(articles => {
-      if (articles.length === 0)
-        return Promise.reject({
-          status: 422,
-          msg: "invalid query on the request"
-        });
       const newArticles = articles.map(article => {
         let newCommentCount = parseInt(article.comment_count);
         article.comment_count = newCommentCount;
@@ -88,40 +83,15 @@ exports.createNewCommentByArticleId = (article_id, commentData) => {
       status: 400,
       msg: "invalid data type in the request body"
     });
-  else
-    return connection("users")
-      .where("username", commentData.username)
-      .returning("*")
-      .then(users => {
-        if (users.length === 0) {
-          return Promise.reject({
-            status: 404,
-            msg: "invalid username in the request body"
-          });
-        }
-      })
-      .then(() => {
-        return connection("articles")
-          .where("article_id", article_id)
-          .returning("*")
-          .then(article => {
-            if (article.length === 0)
-              return Promise.reject({
-                status: 404,
-                msg: "valid but non-exisitent article_id"
-              });
-            //above is checking if all parameters are okay, below is preperation and insertion of the comment into comments.
-            else commentData.article_id = article_id;
-            commentData.author = commentData.username;
-            delete commentData.username;
-            return connection("comments")
-              .insert(commentData)
-              .returning("*")
-              .then(insertedComments => {
-                return insertedComments[0];
-              });
-          });
-      });
+  commentData.article_id = article_id;
+  commentData.author = commentData.username;
+  delete commentData.username;
+  return connection("comments")
+    .insert(commentData)
+    .returning("*")
+    .then(insertedComments => {
+      return insertedComments[0];
+    });
 };
 
 exports.fetchCommentsById = (
@@ -133,14 +103,19 @@ exports.fetchCommentsById = (
     .select("*")
     .where("article_id", article_id)
     .returning("*")
-    .orderBy(sort_by, order)
-    .then(comments => {
-      // Sometimes this needs to send back an empty array!!
-      // if (comments.length === 0)
-      //   return Promise.reject({
-      //     status: 404,
-      //     msg: "valid but non-exisitent article_id"
-      //   });
-      return comments;
+    .orderBy(sort_by, order);
+};
+
+exports.checkArticleExists = article_id => {
+  return connection("articles")
+    .select("*")
+    .where("article_id", article_id)
+    .then(articles => {
+      if (articles.length === 0) {
+        return Promise.reject({
+          status: 400,
+          msg: "valid but non-exisitent article_id"
+        });
+      }
     });
 };
