@@ -14,14 +14,15 @@ beforeEach(() => connection.seed.run());
 after(() => connection.destroy());
 
 describe("/api", () => {
-  xdescribe("GET", () => {
+  describe.only("GET", () => {
     it("SAD - status 200 - responds with JSON describing all the available endpoints on the API", () => {
       return request(app)
         .get("/api")
         .expect(200)
         .then(response => {
+          // console.log(response);
           expect(JSON.parse(response.text)).to.deep.equal({
-            msg: "endpoints endpoints endpoints"
+            msg: "description of every avaliable endpoint on this API"
           });
         });
     });
