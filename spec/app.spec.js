@@ -19,8 +19,10 @@ describe("/api", () => {
       return request(app)
         .get("/api")
         .expect(200)
-        .then(({ body }) => {
-          expect(body).to.be.an("JSON");
+        .then(response => {
+          expect(JSON.parse(response.text)).to.deep.equal({
+            msg: "endpoints endpoints endpoints"
+          });
         });
     });
   });
@@ -266,8 +268,25 @@ describe("/api", () => {
                 "body",
                 "votes",
                 "created_at"
-                //comment_count?? Nessecary?
               );
+            });
+        });
+        it("HAPPY - status 200 - responds with an unchanged article if no req body is passed", () => {
+          return request(app)
+            .patch("/api/articles/1")
+            .send({})
+            .expect(200)
+            .then(({ body }) => {
+              expect(body.article).to.deep.equal({
+                article_id: 1,
+                author: "butter_bridge",
+                body: "I find this existence challenging",
+                comment_count: 13,
+                created_at: "2018-11-15T12:21:54.171Z",
+                title: "Living in the shadow of a great man",
+                topic: "mitch",
+                votes: 100
+              });
             });
         });
         it("SAD - status 404 - msg key on the response body explains error is due to non-existant article_id", () => {
@@ -276,7 +295,7 @@ describe("/api", () => {
             .send({ inc_votes: -10 })
             .expect(404)
             .then(({ body }) => {
-              expect(body.msg).to.equal("valid but non existent article_id");
+              expect(body.msg).to.equal("valid but non-exisitent article_id");
             });
         });
         it("SAD - status 400 - msg key on the response body explains error is due to invalid article_id", () => {
@@ -288,7 +307,7 @@ describe("/api", () => {
               expect(body.msg).to.equal("invalid id");
             });
         });
-        it("SAD - status 400 - msg key on the response body explains error is due to invalid data type in the req body / empty body", () => {
+        it("SAD - status 400 - msg key on the response body explains error is due to invalid data type in the req body", () => {
           return request(app)
             .patch("/api/articles/1")
             .send({ inc_votes: "100" })
@@ -416,7 +435,7 @@ describe("/api", () => {
         it("SAD - status 400 - msg key on the response body explains error is due to non existent article_id", () => {
           return request(app)
             .get("/api/articles/550/comments")
-            .expect(400)
+            .expect(404)
             .then(({ body }) => {
               expect(body.msg).to.equal("valid but non-exisitent article_id");
             });

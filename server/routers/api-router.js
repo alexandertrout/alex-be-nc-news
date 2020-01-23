@@ -6,14 +6,9 @@ const usersRouter = require("./usersRouter");
 const articlesRouter = require("./articlesRouter");
 const commentsRouter = require("./commentsRouter");
 
-apiRouter
-  .route("/")
-  .get(
-    (sendEndpointInfo = (req, res, next) => {
-      res.json({ msg: "endpoints endpoints endpoints" });
-    })
-  )
-  .all(handle405s);
+apiRouter.get("/", (req, res) =>
+  res.json({ msg: "endpoints endpoints endpoints" })
+);
 
 apiRouter.use("/topics", topicsRouter);
 apiRouter.use("/users", usersRouter);

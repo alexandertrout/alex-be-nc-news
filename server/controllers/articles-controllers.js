@@ -31,14 +31,36 @@ exports.getArticleById = (req, res, next) => {
     .catch(next);
 };
 
+// exports.updateVotesById = (req, res, next) => {
+//   let { article_id } = req.params;
+//   let voteChange = req.body.inc_votes;
+//   patchVotesById(article_id, voteChange)
+//     .then(article => {
+//       res.status(200).send({ article });
+//     })
+//     .catch(next);
+// };
+
 exports.updateVotesById = (req, res, next) => {
   let { article_id } = req.params;
   let voteChange = req.body.inc_votes;
-  patchVotesById(article_id, voteChange)
-    .then(article => {
-      res.status(200).send({ article });
-    })
-    .catch(next);
+  if (voteChange === undefined) {
+    fetchArticleById(article_id)
+      .then(article => {
+        res.status(200).send({ article });
+      })
+      .catch(next);
+  } else {
+    let promiseArray = [
+      patchVotesById(article_id, voteChange),
+      checkArticleExists(article_id)
+    ];
+    Promise.all(promiseArray)
+      .then(articles => {
+        res.status(200).send({ article: articles[0] });
+      })
+      .catch(next);
+  }
 };
 
 exports.postCommentToArticleById = (req, res, next) => {

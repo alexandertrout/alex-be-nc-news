@@ -48,21 +48,44 @@ exports.fetchArticleById = article_id => {
     });
 };
 
+// exports.patchVotesById = (article_id, voteChange) => {
+//   if (typeof voteChange !== "number" || voteChange === 0)
+//     return Promise.reject({
+//       status: 400,
+//       msg: "invalid data type in the request body"
+//     });
+
+//   return connection("articles")
+//     .where("article_id", article_id)
+//     .returning("*")
+//     .then(article => {
+//       if (article.length === 0)
+//         return Promise.reject({
+//           status: 404,
+//           msg: "valid but non existent article_id"
+//         });
+//       article[0].votes += voteChange;
+//       return connection("articles")
+//         .where("article_id", article_id)
+//         .update(article[0])
+//         .returning("*");
+//     })
+//     .then(patchedArticle => {
+//       return patchedArticle[0];
+//     });
+// };
 exports.patchVotesById = (article_id, voteChange) => {
-  if (typeof voteChange !== "number" || voteChange === null || voteChange === 0)
+  if (typeof voteChange !== "number" || voteChange === 0)
     return Promise.reject({
       status: 400,
       msg: "invalid data type in the request body"
     });
+
   return connection("articles")
     .where("article_id", article_id)
     .returning("*")
     .then(article => {
-      if (article.length === 0)
-        return Promise.reject({
-          status: 404,
-          msg: "valid but non existent article_id"
-        });
+      if (article.length === 0) return article;
       article[0].votes += voteChange;
       return connection("articles")
         .where("article_id", article_id)
@@ -113,7 +136,7 @@ exports.checkArticleExists = article_id => {
     .then(articles => {
       if (articles.length === 0) {
         return Promise.reject({
-          status: 400,
+          status: 404,
           msg: "valid but non-exisitent article_id"
         });
       }
