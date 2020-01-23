@@ -504,7 +504,7 @@ describe("/api", () => {
         it("SAD - status 400 - msg key on the response body explains error is due to invalid data type in the req body / empty body", () => {
           return request(app)
             .patch("/api/comments/2")
-            .send({})
+            .send({ inc_votes: "votes" })
             .expect(400)
             .then(({ body }) => {
               expect(body.msg).to.equal(

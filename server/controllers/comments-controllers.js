@@ -1,16 +1,30 @@
 const {
   updateCommentById,
-  removeCommentById
+  removeCommentById,
+  fetchCommentById,
+  checkCommentExists
 } = require("../models/comments-models");
 
 exports.patchCommentById = (req, res, next) => {
   let { comment_id } = req.params;
   let voteChange = req.body.inc_votes;
-  updateCommentById(comment_id, voteChange)
-    .then(comment => {
-      res.status(200).send({ comment });
-    })
-    .catch(next);
+  if (voteChange === undefined) {
+    fetchCommentById(comment_id)
+      .then(comment => {
+        res.status(200).send({ comment });
+      })
+      .catch(next);
+  } else {
+    let promiseArray = [
+      updateCommentById(comment_id, voteChange),
+      checkCommentExists(comment_id)
+    ];
+    Promise.all(promiseArray)
+      .then(comments => {
+        res.status(200).send({ comment: comments[0] });
+      })
+      .catch(next);
+  }
 };
 
 exports.deleteCommentById = (req, res, next) => {

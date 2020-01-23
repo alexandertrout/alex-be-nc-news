@@ -11,7 +11,7 @@ const {
 
 app.use(express.json());
 
-app.use("/api", apiRouter);
+//app.use("/api", apiRouter);
 
 app.use(handleCustoms);
 app.use(handle400s);

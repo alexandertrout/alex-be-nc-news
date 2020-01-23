@@ -3,11 +3,15 @@
   "version": "1.0.0",
   "description": "bc-nc-news",
   "main": "index.js",
+  "engines": {
+    "node": "12.12.0"
+  },
   "scripts": {
     "setup-dbs": "psql -f ./db/setup.sql",
     "seed": "knex seed:run",
     "test-utils": "mocha spec/utils.spec.js",
-    "test": "mocha spec/app.spec.js"
+    "test": "mocha spec/app.spec.js",
+    "start": "knex migrate: lastest knex seed:run node server/listen.js"
   },
   "repository": {
     "type": "git",

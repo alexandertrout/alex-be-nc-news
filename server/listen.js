@@ -1,5 +1,7 @@
 const app = require("./app");
 
-app.listen(9090, () => {
-  console.log("listening...");
-});
+let port = process.env.PORT;
+if (port == null || port == "") {
+  port = 9090;
+}
+server.listen(port);
