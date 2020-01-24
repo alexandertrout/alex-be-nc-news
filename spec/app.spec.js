@@ -62,6 +62,25 @@ describe("/api", () => {
     });
   });
   describe("/users", () => {
+    describe("GET", () => {
+      it("HAPPY - status 200 - responds with an array of user objects", () => {
+        return request(app)
+          .get("/api/users")
+          .expect(200)
+          .then(({ body }) => {
+            expect(body.users).to.be.an("array");
+          });
+      });
+      it("HAPPY - status 200 - will accept sort_by and order querys", () => {
+        return request(app)
+          .get("/api/users?sort_by=name&order=desc")
+          .expect(200)
+          .then(({ body }) => {
+            expect(body.users).to.be.an("array");
+            expect(body.users[0].name).to.equal("sam");
+          });
+      });
+    });
     describe("/:username", () => {
       it("SAD - status 405 - invalid method on users endpoint", () => {
         const methods = ["put", "patch", "delete", "post"];
@@ -102,7 +121,7 @@ describe("/api", () => {
   });
   describe("/articles", () => {
     it("SAD - status 405 - invalid method on /:comment_id endpoint", () => {
-      const methods = ["put", "delete", "post", "patch"];
+      const methods = ["put", "delete", "patch"];
       const methodPromises = methods.map(method => {
         return request(app)
           [method]("/api/articles")
@@ -195,20 +214,79 @@ describe("/api", () => {
             );
           });
       });
-      it("SAD - status 400 - msg key on the response body explains error is due to non-existent author", () => {
+      it("SAD - status 404 - msg key on the response body explains error is due to non-existent author", () => {
         return request(app)
           .get("/api/articles?author=timmy")
+          .expect(404)
+          .then(({ body }) => {
+            expect(body.msg).to.equal("user does not exist");
+          });
+      });
+    });
+    describe("POST", () => {
+      it("HAPPY - status 201 - responds with an object of the posted article", () => {
+        return request(app)
+          .post("/api/articles")
+          .send({
+            title: "test article",
+            topic: "mitch",
+            username: "rogersop",
+            body: "This is a test comment"
+          })
+          .expect(201)
+          .then(({ body }) => {
+            expect(body.article).to.contain.keys(
+              "article_id",
+              "title",
+              "topic",
+              "author",
+              "body",
+              "votes",
+              "created_at"
+            );
+          });
+      });
+      it("SAD - status 400 - msg key on the response body explains error is due to invalid data type in the req body / empty body", () => {
+        return request(app)
+          .post("/api/articles")
+          .send({})
           .expect(400)
           .then(({ body }) => {
-            expect(body.msg).to.equal(
-              "invalid author query - user does not exist"
-            );
+            expect(body.msg).to.equal("invalid data type in the request body");
+          });
+      });
+      it("SAD - status 404 - msg key on the response body explains error is due to non-existent username in the req body", () => {
+        return request(app)
+          .post("/api/articles")
+          .send({
+            title: "test article",
+            topic: "mitch",
+            username: "not-a-user",
+            body: "This is a test comment"
+          })
+          .expect(404)
+          .then(({ body }) => {
+            expect(body.msg).to.equal("valid but non-exisitent");
+          });
+      });
+      it("SAD - status 404 - msg key on the response body explains error is due to non-existent topic in the req body", () => {
+        return request(app)
+          .post("/api/articles")
+          .send({
+            title: "test article",
+            topic: "not-mitch",
+            username: "rogersop",
+            body: "This is a test comment"
+          })
+          .expect(404)
+          .then(({ body }) => {
+            expect(body.msg).to.equal("valid but non-exisitent");
           });
       });
     });
     describe("/:article_id", () => {
       it("SAD - status 405 - invalid method on /:article_id endpoint", () => {
-        const methods = ["put", "delete", "post"];
+        const methods = ["put", "post"];
         const methodPromises = methods.map(method => {
           return request(app)
             [method]("/api/articles/:article_id")
@@ -330,10 +408,33 @@ describe("/api", () => {
             });
         });
       });
+      describe("DELETE", () => {
+        it("HAPPY - status 204 - deletes the article by article_id and does not respond with anything", () => {
+          return request(app)
+            .delete("/api/articles/2")
+            .expect(204);
+        });
+        it("SAD - status 404 - msg key on the response body explains error is due to non existent article_id", () => {
+          return request(app)
+            .delete("/api/articles/200")
+            .expect(404)
+            .then(({ body }) => {
+              expect(body.msg).to.equal("non existent article_id");
+            });
+        });
+        it("SAD - status 400 - msg key on the response body explains error is due to invalid article_id", () => {
+          return request(app)
+            .delete("/api/comments/invalid-id")
+            .expect(400)
+            .then(({ body }) => {
+              expect(body.msg).to.equal("invalid id");
+            });
+        });
+      });
     });
     describe("/:article_id/comments", () => {
       it("SAD - status 405 - invalid method on /:comment_id endpoint", () => {
-        const methods = ["put", "delete", "post", "patch"];
+        const methods = ["put", "delete", "patch"];
         const methodPromises = methods.map(method => {
           return request(app)
             [method]("/api/articles")
@@ -345,11 +446,11 @@ describe("/api", () => {
         return Promise.all(methodPromises);
       });
       describe("POST", () => {
-        it("HAPPY - status 200 - responds with an object of the posted comment", () => {
+        it("HAPPY - status 201 - responds with an object of the posted comment", () => {
           return request(app)
             .post("/api/articles/1/comments")
             .send({ username: "rogersop", body: "This is a test comment" })
-            .expect(200)
+            .expect(201)
             .then(({ body }) => {
               expect(body.comment.body).to.equal("This is a test comment");
               expect(body.comment.article_id).to.equal(1);

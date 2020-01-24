@@ -9,7 +9,8 @@ exports.up = function(knex) {
       .integer("article_id")
       .references("article_id")
       .inTable("articles")
-      .notNullable();
+      .notNullable()
+      .onDelete("CASCADE");
     table.integer("votes").defaultTo(0);
     table.timestamp("created_at").defaultTo(knex.fn.now());
     table.text("body");

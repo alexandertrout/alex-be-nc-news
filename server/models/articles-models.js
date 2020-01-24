@@ -26,6 +26,28 @@ exports.fetchAllArticles = (
     });
 };
 
+exports.insertNewArticle = articleData => {
+  if (
+    typeof articleData.title !== "string" ||
+    typeof articleData.topic !== "string" ||
+    typeof articleData.username !== "string" ||
+    typeof articleData.body !== "string"
+  ) {
+    return Promise.reject({
+      status: 400,
+      msg: "invalid data type in the request body"
+    });
+  }
+  articleData.author = articleData.username;
+  delete articleData.username;
+  return connection("articles")
+    .insert(articleData)
+    .returning("*")
+    .then(insertedArticles => {
+      return insertedArticles[0];
+    });
+};
+
 exports.fetchArticleById = article_id => {
   return connection("articles")
     .select("articles.*")
@@ -39,7 +61,8 @@ exports.fetchArticleById = article_id => {
           status: 404,
           msg: "valid but non existent article_id"
         });
-      const newArticles = articles.map(article => {
+      //changed map to forEach
+      articles.forEach(article => {
         let newCommentCount = parseInt(article.comment_count);
         article.comment_count = newCommentCount;
         return article;
@@ -69,6 +92,12 @@ exports.patchVotesById = (article_id, voteChange) => {
     .then(patchedArticle => {
       return patchedArticle[0];
     });
+};
+
+exports.removeArticleById = article_id => {
+  return connection("articles")
+    .where("article_id", article_id)
+    .del();
 };
 
 exports.createNewCommentByArticleId = (article_id, commentData) => {
