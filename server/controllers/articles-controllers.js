@@ -79,10 +79,12 @@ exports.updateVotesById = (req, res, next) => {
 
 exports.deleteArticleById = (req, res, next) => {
   const { article_id } = req.params;
+  console.log(article_id);
   removeArticleById(article_id)
     .then(deleteCount => {
-      if (deleteCount === 0)
+      if (deleteCount === 0) {
         return Promise.reject({ status: 404, msg: "non existent article_id" });
+      }
       res.sendStatus(204);
     })
     .catch(next);
