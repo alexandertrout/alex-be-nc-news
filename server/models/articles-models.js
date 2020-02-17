@@ -5,25 +5,29 @@ exports.fetchAllArticles = (
   order = "desc",
   author,
   topic
+  //p = 0 (limit hardcoded below)
 ) => {
-  return connection("articles")
-    .select("articles.*")
-    .count({ comment_count: "comment_id" })
-    .leftJoin("comments", "articles.article_id", "comments.article_id")
-    .groupBy("articles.article_id")
-    .modify(query => {
-      if (author) query.where("articles.author", "=", author);
-      if (topic) query.where("topic", "=", topic);
-    })
-    .orderBy(sort_by, order)
-    .then(articles => {
-      const newArticles = articles.map(article => {
-        let newCommentCount = parseInt(article.comment_count);
-        article.comment_count = newCommentCount;
-        return article;
-      });
-      return newArticles;
-    });
+  return (
+    connection("articles")
+      .select("articles.*")
+      .count({ comment_count: "comment_id" })
+      .leftJoin("comments", "articles.article_id", "comments.article_id")
+      .groupBy("articles.article_id")
+      .modify(query => {
+        if (author) query.where("articles.author", "=", author);
+        if (topic) query.where("topic", "=", topic);
+      })
+      .orderBy(sort_by, order)
+      // add pagination
+      .then(articles => {
+        const newArticles = articles.map(article => {
+          let newCommentCount = parseInt(article.comment_count);
+          article.comment_count = newCommentCount;
+          return article;
+        });
+        return newArticles;
+      })
+  );
 };
 
 exports.insertNewArticle = articleData => {

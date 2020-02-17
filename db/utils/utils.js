@@ -1,14 +1,10 @@
 exports.formatDates = list => {
-  let newList = list
-    // .map(obj => {
-    //   return { ...obj };
-    // })
-    .map(obj => {
-      let newObj = { ...obj };
-      let newTimestamp = new Date(newObj.created_at);
-      newObj.created_at = newTimestamp;
-      return newObj;
-    });
+  let newList = list.map(obj => {
+    let newObj = { ...obj };
+    let newTimestamp = new Date(newObj.created_at);
+    newObj.created_at = newTimestamp;
+    return newObj;
+  });
   return newList;
 };
 
